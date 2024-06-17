@@ -1,0 +1,10 @@
+GET http://localhost:8080/order
+
+###
+
+POST http://localhost:8081/query
+Content-Type: application/json
+
+{
+  "query": "{ listOrders { id description price created_at } }"
+}

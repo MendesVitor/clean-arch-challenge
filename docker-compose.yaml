@@ -1,0 +1,42 @@
+# docker-compose.yaml
+
+services:
+    db:
+        image: postgres:13
+        environment:
+            POSTGRES_DB: orders_db
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: password
+        ports:
+            - '5432:5432'
+        volumes:
+            - db-data:/var/lib/postgresql/data
+        healthcheck:
+            test: ['CMD', 'pg_isready', '-U', 'user']
+            interval: 30s
+            timeout: 10s
+            retries: 5
+
+    migrate:
+        image: migrate/migrate:v4.15.1
+        command: ['-path', '/migrations', '-database', 'postgres://user:password@db:5432/orders_db?sslmode=disable', 'up']
+        volumes:
+            - ./migrations:/migrations
+        depends_on:
+            db:
+                condition: service_healthy
+
+    app:
+        build: .
+        ports:
+            - '8080:8080'
+            - '50051:50051'
+            - '8081:8081'
+        depends_on:
+            - db
+            - migrate
+        volumes:
+            - ./migrations:/app/migrations
+
+volumes:
+    db-data:
